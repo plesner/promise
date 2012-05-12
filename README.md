@@ -1,0 +1,4 @@
+promise
+=======
+
+JavaScript promise library
