@@ -42,6 +42,15 @@ Promise.of = function (value) {
 };
 
 /**
+ * Returns a pre-failed promise with the given error.
+ */
+Promise.error = function (error) {
+  var result = new Promise();
+  result.fail(error);
+  return result;
+};
+
+/**
  * Returns a promise that resolves as soon as one of the given argument
  * promises resolves.
  */
@@ -203,6 +212,29 @@ Promise.failAfter = function (error, timeout) {
   defer(result.fail.bind(result, error), timeout);
   return result;
 };
+
+/**
+ * Calls the first argument with the remaining arguments and, as the last
+ * argument, a callback that fulfills the promise that is returned from
+ * this call. For instance, to convert this method call into a promise:
+ *
+ *   foo.bar(a, b, callback);
+ *
+ * you would do
+ *
+ *   Promise.fromCallbackMethod(foo, "bar", a, b);
+ */
+Promise.fromCallbackMethod = function (holder, methodName, varArgs) {
+  var args = Array.prototype.slice.call(arguments, 2);
+  var result = new Promise();
+  args.push(result.fulfill.bind(result));
+  try {
+    holder[methodName].apply(holder, args);
+  } catch (e) {
+    result.fail(e);
+  }
+  return result;
+}
 
 /**
  * Returns the value of this promise if it has been fulfilled, if it has
@@ -371,8 +403,8 @@ Promise.prototype.scheduleFireListener_ = function (listener, parentTraceOpt) {
   if (this.hasFailed()) {
     var handler = listener.onFailed;
     if (handler) {
-      var ownTrace = new promise.trace.PromiseTrace(this.traceSegment_,
-          parentTraceOpt);
+      var ownTrace = new promise.trace.PromiseTrace(this.data_,
+          this.traceSegment_, parentTraceOpt);
       defer(handler.bind(handler, this.data_, ownTrace));
     }
   } else {

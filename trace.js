@@ -15,9 +15,10 @@ trace.captureTraces = true;
 /**
  * Abstract supertype of promise traces.
  */
-function PromiseTrace(segment, parent) {
+function PromiseTrace(error, segment, parent) {
   this.segment_ = segment;
   this.parent_ = parent;
+  this.error_ = error;
 }
 
 /**
@@ -125,7 +126,8 @@ PromiseTrace.prototype.addSegments = function (list) {
  * either an error, in which case its stack trace is shown as the first
  * in the promise trace, or something else which is used as the message.
  */
-PromiseTrace.prototype.toString = function (errorOpt) {
+PromiseTrace.prototype.toString = function () {
+  var errorOpt = this.error_;
   var segmentList = this.addSegments([]);
   var result = [];
   var prevLines;
